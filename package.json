@@ -1,0 +1,61 @@
+{
+  "name": "@kev/vps-setup",
+  "version": "1.0.0",
+  "description": "CLI persistant pour le provisioning VPS avec Ansible",
+  "author": "Kevin <kevin@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kev/vps-setup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kev/vps-setup/issues"
+  },
+  "homepage": "https://github.com/kev/vps-setup#readme",
+  "type": "module",
+  "bin": {
+    "vps-setup": "./dist/vps-setup"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build ./src/index.ts --compile --outfile dist/vps-setup",
+    "build:all": "bun run build:linux && bun run build:linux-arm && bun run build:mac && bun run build:mac-arm && bun run build:windows",
+    "build:linux": "bun build ./src/index.ts --compile --target linux-x64 --outfile dist/vps-setup-linux-x64",
+    "build:linux-arm": "bun build ./src/index.ts --compile --target linux-arm64 --outfile dist/vps-setup-linux-arm64",
+    "build:mac": "bun build ./src/index.ts --compile --target darwin-x64 --outfile dist/vps-setup-darwin-x64",
+    "build:mac-arm": "bun build ./src/index.ts --compile --target darwin-arm64 --outfile dist/vps-setup-darwin-arm64",
+    "build:windows": "bun build ./src/index.ts --compile --target windows-x64 --outfile dist/vps-setup-windows-x64.exe",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "date-fns": "^3.6.0",
+    "execa": "^8.0.1",
+    "ora": "^8.0.1",
+    "yaml": "^2.3.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "keywords": [
+    "vps",
+    "ansible",
+    "cli",
+    "provisioning",
+    "server",
+    "devops"
+  ]
+}

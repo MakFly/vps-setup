@@ -1,0 +1,14 @@
+# Bun configuration for vps-setup CLI
+
+[install]
+production = false
+
+[run]
+# Enable TypeScript support
+preload = [".bun-types"]
+
+[build]
+# Build configuration
+target = "bun"
+minify = false
+sourcemap = "external"
