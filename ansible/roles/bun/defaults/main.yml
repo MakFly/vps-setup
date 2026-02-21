@@ -1,0 +1,5 @@
+---
+# Bun role default variables
+
+bun_install_path: "~{{ runtime_user }}/.bun"
+runtime_user: "{{ ansible_user | default('root') }}"

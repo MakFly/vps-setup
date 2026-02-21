@@ -1,0 +1,82 @@
+---
+# Common role - Main tasks
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  tags: always
+
+- name: Upgrade all packages
+  ansible.builtin.apt:
+    upgrade: dist
+    autoremove: true
+  tags: upgrade
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  tags: packages
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ system_timezone }}"
+  tags: timezone
+
+- name: Generate locale
+  community.general.locale_gen:
+    name: "{{ system_locale }}"
+    state: present
+  notify: Update locale
+  tags: locale
+
+- name: Set default locale
+  ansible.builtin.command:
+    cmd: "update-locale LANG={{ system_locale }} LC_ALL={{ system_locale }}"
+  changed_when: true
+  tags: locale
+
+- name: Ensure /etc/hosts has proper hostname
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^127.0.1.1"
+    line: "127.0.1.1 {{ ansible_hostname }}"
+    state: present
+  tags: hostname
+
+- name: Create vim config directory
+  ansible.builtin.file:
+    path: /etc/vim
+    state: directory
+    mode: '0755'
+
+- name: Set vim as default editor
+  ansible.builtin.copy:
+    dest: /etc/profile.d/editor.sh
+    content: |
+      export EDITOR=vim
+      export VISUAL=vim
+    mode: '0644'
+  tags: editor
+
+- name: Configure bashrc for better experience
+  ansible.builtin.blockinfile:
+    path: /etc/bash.bashrc
+    block: |
+      # Custom VPS setup additions
+      export HISTSIZE=10000
+      export HISTFILESIZE=20000
+      export HISTCONTROL=ignoreboth
+      shopt -s histappend
+      alias ll='ls -alF'
+      alias la='ls -A'
+      alias l='ls -CF'
+      alias ..='cd ..'
+      alias ...='cd ../..'
+      alias grep='grep --color=auto'
+      alias fgrep='fgrep --color=auto'
+      alias egrep='egrep --color=auto'
+    marker: "# {mark} ANSIBLE VPS SETUP"
+    state: present
+  tags: bashrc

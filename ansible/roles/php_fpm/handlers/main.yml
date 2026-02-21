@@ -1,0 +1,13 @@
+---
+# PHP-FPM role handlers
+
+- name: Restart PHP-FPM
+  ansible.builtin.systemd:
+    name: "php{{ php_version }}-fpm"
+    state: restarted
+    enabled: true
+
+- name: Reload PHP-FPM
+  ansible.builtin.systemd:
+    name: "php{{ php_version }}-fpm"
+    state: reloaded

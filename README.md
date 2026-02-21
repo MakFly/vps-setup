@@ -231,22 +231,33 @@ vps-setup status prod-web
 
 ## 🔧 Intégration Ansible
 
-VPS Setup génère dynamiquement la configuration Ansible et exécute les playbooks avec les bons paramètres.
+VPS Setup inclut les playbooks et rôles Ansible directement dans le répertoire `ansible/`.
 
-**Structure attendue :**
+**Structure :**
 
 ```
-ansible-vps-setup/
-├── playbooks/
-│   └── provision.yml      # Playbook principal
-├── roles/
-│   ├── docker/            # Installation Docker
-│   ├── php_fpm/           # PHP-FPM + extensions
-│   ├── caddy/             # Serveur web Caddy
-│   ├── nodejs/            # Node.js
-│   ├── bun/               # Runtime Bun
-│   └── security/          # Hardening serveur
-└── inventory/
+vps-setup/
+├── src/                    # CLI TypeScript
+├── ansible/                # Playbooks & rôles Ansible
+│   ├── ansible.cfg
+│   ├── Makefile
+│   ├── playbooks/
+│   │   ├── provision.yml   # Playbook principal
+│   │   ├── site.yml
+│   │   └── security.yml
+│   ├── roles/
+│   │   ├── docker/         # Installation Docker
+│   │   ├── php_fpm/        # PHP-FPM + extensions
+│   │   ├── caddy/          # Serveur web Caddy
+│   │   ├── nodejs/         # Node.js
+│   │   ├── bun/            # Runtime Bun
+│   │   └── security/       # Hardening serveur
+│   ├── inventory/
+│   ├── vars/
+│   ├── scripts/
+│   └── files/
+├── documentation/          # Site de documentation (Astro)
+└── package.json
 ```
 
 ---

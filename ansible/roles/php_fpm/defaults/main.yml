@@ -1,0 +1,38 @@
+---
+# PHP-FPM role default variables
+
+php_version: "8.2"
+php_fpm_pool_user: www-data
+php_fpm_pool_group: www-data
+php_fpm_socket_path: "/run/php/php{{ php_version }}-fpm.sock"
+
+# PHP modules to install
+php_modules:
+  - "php{{ php_version }}-fpm"
+  - "php{{ php_version }}-mysql"
+  - "php{{ php_version }}-curl"
+  - "php{{ php_version }}-gd"
+  - "php{{ php_version }}-mbstring"
+  - "php{{ php_version }}-xml"
+  - "php{{ php_version }}-zip"
+  - "php{{ php_version }}-intl"
+  - "php{{ php_version }}-opcache"
+  - "php{{ php_version }}-redis"
+  - "php{{ php_version }}-bcmath"
+  - "php{{ php_version }}-cli"
+
+# OPcache settings
+php_opcache_enable: 1
+php_opcache_memory_consumption: 256
+php_opcache_interned_strings_buffer: 16
+php_opcache_max_accelerated_files: 10000
+php_opcache_validate_timestamps: 0
+php_opcache_revalidate_freq: 2
+
+# PHP-FPM pool settings
+php_fpm_pm: dynamic
+php_fpm_pm_max_children: 50
+php_fpm_pm_start_servers: 5
+php_fpm_pm_min_spare_servers: 5
+php_fpm_pm_max_spare_servers: 35
+php_fpm_pm_max_requests: 500

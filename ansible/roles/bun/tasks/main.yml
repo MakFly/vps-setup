@@ -1,0 +1,73 @@
+---
+# Bun role - Main tasks (per-user installation)
+
+- name: Check if Bun is already installed
+  ansible.builtin.stat:
+    path: "{{ bun_install_path }}/bin/bun"
+  register: bun_installed
+
+- name: Get current Bun version if installed
+  ansible.builtin.command: "{{ bun_install_path }}/bin/bun --version"
+  register: bun_version_check
+  changed_when: false
+  failed_when: false
+  when: bun_installed.stat.exists
+
+- name: Display current Bun version
+  ansible.builtin.debug:
+    msg: "Bun {{ bun_version_check.stdout }} is already installed"
+  when: bun_installed.stat.exists and bun_version_check.rc == 0
+
+- name: Install Bun
+  ansible.builtin.shell: |
+    set -e
+    curl -fsSL https://bun.sh/install | bash
+  args:
+    executable: /bin/bash
+    creates: "{{ bun_install_path }}/bin/bun"
+  environment:
+    BUN_INSTALL: "{{ bun_install_path }}"
+  become: true
+  become_user: "{{ runtime_user }}"
+  when: not bun_installed.stat.exists
+
+- name: Create Bun profile script
+  ansible.builtin.copy:
+    dest: "/etc/profile.d/bun.sh"
+    content: |
+      export BUN_INSTALL="{{ bun_install_path }}"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Add Bun to user's bashrc
+  ansible.builtin.lineinfile:
+    path: "~{{ runtime_user }}/.bashrc"
+    line: |
+      export BUN_INSTALL="{{ bun_install_path }}"
+      [ -s "$BUN_INSTALL/bun-env.sh" ] && source "$BUN_INSTALL/bun-env.sh"
+    state: present
+    create: true
+    owner: "{{ runtime_user }}"
+    group: "{{ runtime_user }}"
+    mode: '0644'
+  become: true
+  become_user: "{{ runtime_user }}"
+
+- name: Verify Bun installation
+  ansible.builtin.shell: |
+    export BUN_INSTALL="{{ bun_install_path }}"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+    bun --version
+  args:
+    executable: /bin/bash
+  register: bun_verify
+  become: true
+  become_user: "{{ runtime_user }}"
+  changed_when: false
+
+- name: Display Bun installation result
+  ansible.builtin.debug:
+    msg: "Bun {{ bun_verify.stdout }} installed successfully for user {{ runtime_user }}"

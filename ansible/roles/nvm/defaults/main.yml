@@ -1,0 +1,7 @@
+---
+# NVM role default variables
+
+nvm_version: "0.39.7"
+nvm_node_version: "20"
+nvm_install_path: "~{{ runtime_user }}/.nvm"
+runtime_user: "{{ ansible_user | default('root') }}"

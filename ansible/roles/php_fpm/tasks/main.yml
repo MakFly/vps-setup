@@ -1,0 +1,80 @@
+---
+# PHP-FPM role - Main tasks
+
+- name: Include OS-specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_distribution | lower }}.yml"
+  tags: php-install
+
+- name: Install PHP and extensions
+  ansible.builtin.apt:
+    name: "{{ php_modules }}"
+    state: present
+    update_cache: true
+  tags: php-install
+
+- name: Create PHP-FPM pool directory
+  ansible.builtin.file:
+    path: "/etc/php/{{ php_version }}/fpm/pool.d"
+    state: directory
+    mode: '0755'
+  tags: php-config
+
+- name: Configure PHP-FPM pool
+  ansible.builtin.template:
+    src: www.conf.j2
+    dest: "/etc/php/{{ php_version }}/fpm/pool.d/www.conf"
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  notify: Restart PHP-FPM
+  tags: php-config
+
+- name: Configure PHP OPcache
+  ansible.builtin.template:
+    src: opcache.ini.j2
+    dest: "/etc/php/{{ php_version }}/fpm/conf.d/99-opcache-custom.ini"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart PHP-FPM
+  tags: php-config
+
+- name: Create web root directory
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: "{{ php_fpm_pool_user }}"
+    group: "{{ php_fpm_pool_group }}"
+    mode: '0755'
+  tags: php-config
+
+- name: Create test PHP file
+  ansible.builtin.copy:
+    dest: /var/www/html/index.php
+    content: |
+      <?php
+      phpinfo();
+    owner: "{{ php_fpm_pool_user }}"
+    group: "{{ php_fpm_pool_group }}"
+    mode: '0644'
+  tags: php-config
+
+- name: Ensure PHP-FPM service is running and enabled
+  ansible.builtin.systemd:
+    name: "php{{ php_version }}-fpm"
+    state: started
+    enabled: true
+  tags: php-service
+
+- name: Verify PHP-FPM socket exists
+  ansible.builtin.stat:
+    path: "{{ php_fpm_socket_path }}"
+  register: php_socket
+  tags: php-verify
+
+- name: Fail if PHP-FPM socket not found
+  ansible.builtin.fail:
+    msg: "PHP-FPM socket not found at {{ php_fpm_socket_path }}"
+  when: not php_socket.stat.exists
+  tags: php-verify

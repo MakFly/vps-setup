@@ -1,0 +1,11 @@
+---
+# Common role handlers
+
+- name: Restart systemd-journald
+  ansible.builtin.systemd:
+    name: systemd-journald
+    state: restarted
+
+- name: Update locale
+  ansible.builtin.command: locale-gen
+  changed_when: true

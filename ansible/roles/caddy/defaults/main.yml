@@ -1,0 +1,15 @@
+---
+# Caddy role default variables
+
+caddy_email: "admin@example.com"
+caddy_sites:
+  - name: "default"
+    domains:
+      - "{{ ansible_default_ipv4.address | default('localhost') }}"
+    root: "/var/www/html"
+    php: true
+    encode: true
+    log_file: "/var/log/caddy/default.log"
+
+# PHP integration
+php_fpm_socket: "/run/php/php{{ php_version | default('8.2') }}-fpm.sock"

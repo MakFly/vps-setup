@@ -1,0 +1,74 @@
+# {{ ansible_managed }}
+# Caddyfile - Reverse Proxy Configuration
+
+# Global options
+{
+    admin off
+    email {{ caddy_email }}
+    acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+{% for site in caddy_sites %}
+# Site: {{ site.name }}
+{{ site.domains | join(', ') }} {
+    root * {{ site.root }}
+
+    {% if site.encode | default(true) %}
+    encode gzip zstd
+    {% endif %}
+
+    # Security headers
+    header {
+        # Enable HSTS
+        Strict-Transport-Security "max-age=31536000; include-subdomains; preload"
+        # Prevent clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        # XSS protection
+        X-XSS-Protection "1; mode=block"
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Remove server information
+        -Server
+    }
+
+    {% if site.php | default(false) %}
+    # PHP-FPM integration
+    php_fastcgi unix/{{ php_fpm_socket }} {
+        root {{ site.root }}
+        split .php
+        index index.php
+        env SCRIPT_FILENAME $request_filename
+    }
+    {% endif %}
+
+    # Serve static files
+    file_server
+
+    # Try files first, then index.php
+    try_files {path} {path}/index.php?{query} index.php?{query}
+
+    # Logging
+    {% if site.log_file | default(false) %}
+    log {
+        output file {{ site.log_file }} {
+            roll_size 100mb
+            roll_keep 10
+        }
+    }
+    {% endif %}
+
+    # Additional headers for PHP
+    {% if site.php | default(false) %}
+    @php path *.php
+    header @php Content-Type "text/html; charset=utf-8"
+    {% endif %}
+}
+
+{% endfor %}
+
+# Health check endpoint
+:8080 {
+    respond /health "OK" 200
+}

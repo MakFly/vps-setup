@@ -1,0 +1,55 @@
+---
+# Node.js role - Main tasks (system-wide installation via NodeSource)
+
+- name: Check if Node.js is already installed
+  ansible.builtin.command: node --version
+  register: node_version_check
+  changed_when: false
+  failed_when: false
+
+- name: Display current Node.js version
+  ansible.builtin.debug:
+    msg: "Node.js {{ node_version_check.stdout }} is already installed"
+  when: node_version_check.rc == 0
+
+- name: Check if we need to install/update Node.js
+  ansible.builtin.set_fact:
+    nodejs_needs_install: "{{ node_version_check.rc != 0 or nodejs_force_install | default(false) }}"
+
+- name: Download NodeSource setup script
+  ansible.builtin.get_url:
+    url: "https://deb.nodesource.com/setup_{{ nodejs_version }}.x"
+    dest: /tmp/nodesource_setup.sh
+    mode: '0755'
+  when: nodejs_needs_install
+
+- name: Run NodeSource setup script
+  ansible.builtin.command: /tmp/nodesource_setup.sh
+  when: nodejs_needs_install
+  changed_when: true
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: "{{ nodejs_package_state }}"
+    update_cache: true
+  when: nodejs_needs_install
+
+- name: Clean up setup script
+  ansible.builtin.file:
+    path: /tmp/nodesource_setup.sh
+    state: absent
+
+- name: Verify Node.js installation
+  ansible.builtin.command: node --version
+  register: node_version_final
+  changed_when: false
+
+- name: Verify npm installation
+  ansible.builtin.command: npm --version
+  register: npm_version_final
+  changed_when: false
+
+- name: Display installed versions
+  ansible.builtin.debug:
+    msg: "Node.js {{ node_version_final.stdout }} and npm {{ npm_version_final.stdout }} installed successfully"

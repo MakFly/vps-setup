@@ -1,0 +1,59 @@
+---
+# ===========================================
+# VPS Setup - Full Provisioning
+# ===========================================
+
+- name: Common setup
+  hosts: all
+  roles:
+    - role: common
+      tags: [common, always]
+
+- name: Security hardening
+  hosts: all
+  roles:
+    - role: security
+      when: vps_components.security | default(true)
+      tags: [security]
+
+- name: Docker installation
+  hosts: all
+  roles:
+    - role: docker
+      when: vps_components.docker | default(false)
+      tags: [docker]
+
+- name: PHP-FPM installation
+  hosts: all
+  roles:
+    - role: php_fpm
+      when: vps_components.php_fpm | default(false)
+      tags: [php, php_fpm]
+
+- name: Caddy reverse proxy
+  hosts: all
+  roles:
+    - role: caddy
+      when: vps_components.caddy | default(false)
+      tags: [caddy]
+
+- name: Node.js runtime
+  hosts: all
+  roles:
+    - role: nodejs
+      when: vps_components.nodejs | default(false)
+      tags: [nodejs, node]
+
+- name: NVM installation
+  hosts: all
+  roles:
+    - role: nvm
+      when: vps_components.nvm | default(false)
+      tags: [nvm]
+
+- name: Bun runtime
+  hosts: all
+  roles:
+    - role: bun
+      when: vps_components.bun | default(false)
+      tags: [bun]

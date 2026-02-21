@@ -1,0 +1,18 @@
+---
+# Security role - Main tasks
+
+- name: Include pre-flight checks
+  ansible.builtin.include_tasks: preflight.yml
+  tags: always
+
+- name: Include UFW tasks
+  ansible.builtin.include_tasks: ufw.yml
+  tags: ufw
+
+- name: Include fail2ban tasks
+  ansible.builtin.include_tasks: fail2ban.yml
+  tags: fail2ban
+
+- name: Include SSH hardening tasks
+  ansible.builtin.include_tasks: ssh.yml
+  tags: ssh

@@ -1,0 +1,35 @@
+; {{ ansible_managed }}
+; PHP-FPM Pool Configuration
+
+[www]
+user = {{ php_fpm_pool_user }}
+group = {{ php_fpm_pool_group }}
+
+; Listen on Unix socket
+listen = {{ php_fpm_socket_path }}
+listen.owner = {{ php_fpm_pool_user }}
+listen.group = {{ php_fpm_pool_group }}
+listen.mode = 0660
+
+; Process management
+pm = {{ php_fpm_pm }}
+pm.max_children = {{ php_fpm_pm_max_children }}
+pm.start_servers = {{ php_fpm_pm_start_servers }}
+pm.min_spare_servers = {{ php_fpm_pm_min_spare_servers }}
+pm.max_spare_servers = {{ php_fpm_pm_max_spare_servers }}
+pm.max_requests = {{ php_fpm_pm_max_requests }}
+
+; Status and ping
+pm.status_path = /fpm-status
+ping.path = /fpm-ping
+
+; Slow log
+slowlog = /var/log/php{{ php_version }}-fpm-slow.log
+request_slowlog_timeout = 10s
+
+; Security
+php_admin_value[error_log] = /var/log/php{{ php_version }}-fpm-error.log
+php_admin_flag[log_errors] = on
+
+; Environment variables
+clear_env = no

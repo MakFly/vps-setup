@@ -41,7 +41,7 @@ export interface Config {
  */
 export const DEFAULT_CONFIG: Config = {
   version: "1.0.0",
-  ansiblePath: "../ansible-vps-setup",
+  ansiblePath: "./ansible",
   defaultProfile: "full-stack",
   logLevel: "info",
   historyRetentionDays: 30,

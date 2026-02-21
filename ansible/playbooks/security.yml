@@ -1,0 +1,14 @@
+---
+# ===========================================
+# VPS Setup - Security Only
+# ===========================================
+# Usage: ansible-playbook playbooks/security.yml
+
+- name: Security hardening
+  hosts: all
+  become: true
+  roles:
+    - role: common
+      tags: [common]
+    - role: security
+      tags: [security, ufw, fail2ban, ssh]

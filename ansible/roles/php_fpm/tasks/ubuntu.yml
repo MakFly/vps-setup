@@ -1,0 +1,14 @@
+---
+# PHP installation for Ubuntu
+# Ubuntu 24.04 has PHP 8.3 by default
+
+- name: Add Ondrej PHP PPA for additional versions
+  ansible.builtin.apt_repository:
+    repo: "ppa:ondrej/php"
+    state: present
+    update_cache: true
+  when: php_version != "8.3"
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true

@@ -1,0 +1,91 @@
+---
+# NVM role - Main tasks (per-user installation)
+
+- name: Check if NVM is already installed
+  ansible.builtin.stat:
+    path: "{{ nvm_install_path }}/nvm.sh"
+  register: nvm_installed
+
+- name: Get current NVM version if installed
+  ansible.builtin.shell: |
+    source {{ nvm_install_path }}/nvm.sh
+    nvm --version
+  args:
+    executable: /bin/bash
+  register: nvm_version_check
+  changed_when: false
+  failed_when: false
+  when: nvm_installed.stat.exists
+
+- name: Display current NVM version
+  ansible.builtin.debug:
+    msg: "NVM {{ nvm_version_check.stdout }} is already installed"
+  when: nvm_installed.stat.exists and nvm_version_check.rc == 0
+
+- name: Ensure NVM directory exists
+  ansible.builtin.file:
+    path: "{{ nvm_install_path }}"
+    state: directory
+    owner: "{{ runtime_user }}"
+    group: "{{ runtime_user }}"
+    mode: '0755'
+  become: true
+
+- name: Install NVM
+  ansible.builtin.shell: |
+    set -e
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v{{ nvm_version }}/install.sh | bash
+  args:
+    executable: /bin/bash
+  environment:
+    NVM_DIR: "{{ nvm_install_path }}"
+  when: not nvm_installed.stat.exists
+  become: true
+  become_user: "{{ runtime_user }}"
+  changed_when: true
+
+- name: Create NVM profile script
+  ansible.builtin.copy:
+    dest: "/etc/profile.d/nvm.sh"
+    content: |
+      export NVM_DIR="{{ nvm_install_path }}"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Install default Node.js version via NVM
+  ansible.builtin.shell: |
+    source {{ nvm_install_path }}/nvm.sh
+    nvm install {{ nvm_node_version }}
+    nvm use {{ nvm_node_version }}
+    nvm alias default {{ nvm_node_version }}
+  args:
+    executable: /bin/bash
+  environment:
+    NVM_DIR: "{{ nvm_install_path }}"
+  become: true
+  become_user: "{{ runtime_user }}"
+  when: not nvm_installed.stat.exists or nvm_install_node | default(true)
+  changed_when: true
+
+- name: Verify NVM installation
+  ansible.builtin.shell: |
+    source {{ nvm_install_path }}/nvm.sh
+    nvm --version
+    node --version
+    npm --version
+  args:
+    executable: /bin/bash
+  environment:
+    NVM_DIR: "{{ nvm_install_path }}"
+  register: nvm_verify
+  become: true
+  become_user: "{{ runtime_user }}"
+  changed_when: false
+
+- name: Display NVM installation result
+  ansible.builtin.debug:
+    msg: "NVM installed successfully:\n{{ nvm_verify.stdout }}"

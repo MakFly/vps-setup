@@ -1,0 +1,14 @@
+---
+# Default component selection
+# Use this file as a base configuration
+
+vps_components:
+  docker: true
+  php_fpm: false
+  caddy: false
+  nodejs: true
+  nvm: false
+  bun: true
+  security: true
+
+runtime_user: "{{ ansible_user | default('root') }}"

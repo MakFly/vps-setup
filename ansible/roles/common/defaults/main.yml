@@ -1,0 +1,25 @@
+---
+# Common role default variables
+
+common_packages:
+  - curl
+  - wget
+  - git
+  - vim
+  - htop
+  - tmux
+  - unzip
+  - zip
+  - acl
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  - rsync
+  - jq
+  - tree
+  - ncdu
+
+system_timezone: "Europe/Paris"
+system_locale: "en_US.UTF-8"

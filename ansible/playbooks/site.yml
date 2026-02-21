@@ -1,0 +1,28 @@
+---
+# ===========================================
+# VPS Setup - Main Entry Point
+# ===========================================
+# Usage: ansible-playbook playbooks/site.yml
+# With config: ansible-playbook playbooks/site.yml -e @provision_config.yml
+
+- name: Gather facts
+  hosts: all
+  gather_facts: true
+  tags: always
+
+- name: Include OS-specific variables
+  hosts: all
+  tasks:
+    - name: Include Debian variables
+      ansible.builtin.include_vars: "{{ item }}"
+      with_first_found:
+        - files:
+            - "debian.yml"
+            - "ubuntu.yml"
+          paths:
+            - "{{ playbook_dir }}/../inventory/group_vars"
+          skip: true
+      tags: always
+
+- name: Apply common configuration
+  ansible.builtin.import_playbook: provision.yml

@@ -1,0 +1,9 @@
+---
+# ===========================================
+# Debian-specific Variables
+# ===========================================
+
+php_version: "8.2"
+
+docker_gpg_key: "https://download.docker.com/linux/debian/gpg"
+docker_repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"

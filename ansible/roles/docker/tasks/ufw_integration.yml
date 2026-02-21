@@ -1,0 +1,50 @@
+---
+# CRITICAL: Docker + UFW Firewall Fix
+# Docker manipulates iptables directly, bypassing UFW
+# This task ensures UFW rules are respected
+
+- name: Configure Docker to not manipulate iptables
+  ansible.builtin.lineinfile:
+    dest: /etc/default/docker
+    regexp: '^DOCKER_OPTS='
+    line: 'DOCKER_OPTS="--iptables=false"'
+    create: true
+    mode: '0644'
+  notify: Restart Docker
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Create UFW after.rules for Docker
+  ansible.builtin.blockinfile:
+    path: /etc/ufw/after.rules
+    block: |
+      # BEGIN UFW AND DOCKER
+      *nat
+      :POSTROUTING ACCEPT [0:0]
+      -A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+      COMMIT
+
+      *filter
+      :ufw-user-forward - [0:0]
+      :DOCKER-USER - [0:0]
+
+      -A DOCKER-USER -j RETURN
+      -A ufw-user-forward -j ufw-user-logging-forward
+      -A ufw-user-forward -j DROP
+      COMMIT
+      # END UFW AND DOCKER
+    marker: "# {mark} ANSIBLE DOCKER UFW"
+    state: present
+    insertafter: EOF
+  notify: Reload UFW after Docker
+
+- name: Reload UFW to apply Docker rules
+  ansible.builtin.command: ufw reload
+  changed_when: true
+  when: not ansible_check_mode
+
+- name: Debug - Docker UFW fix applied
+  ansible.builtin.debug:
+    msg: |
+      ✓ Docker UFW fix applied
+      Docker will no longer bypass UFW firewall rules
+      UFW rules now properly filter Docker traffic

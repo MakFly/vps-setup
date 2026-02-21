@@ -1,0 +1,64 @@
+---
+# Pre-flight SSH checks - Prevent lockout
+
+- name: Check if SSH keys exist for current user
+  ansible.builtin.stat:
+    path: "~/.ssh/authorized_keys"
+  register: ssh_authorized_keys
+  become: false
+  delegate_to: localhost
+  run_once: true
+
+- name: Get SSH keys from remote server
+  ansible.builtin.command: cat ~/.ssh/authorized_keys
+  register: remote_ssh_keys
+  changed_when: false
+  failed_when: false
+  become: false
+
+- name: Check if authorized_keys exists on remote
+  ansible.builtin.stat:
+    path: "~{{ ansible_user }}/.ssh/authorized_keys"
+  register: remote_authorized_keys_stat
+
+- name: Warning - No SSH keys detected
+  ansible.builtin.debug:
+    msg: |
+      ⚠️  WARNING: No SSH authorized_keys detected for user '{{ ansible_user }}'
+      ⚠️  Enabling SSH hardening may LOCK YOU OUT of this server!
+
+      Current connection: {{ ansible_connection | default('ssh') }}
+      User: {{ ansible_user }}
+
+      Recommendation:
+      1. Ensure you have SSH key access before enabling hardening
+      2. Or keep a separate terminal session open as backup
+  when: >
+    (remote_authorized_keys_stat.stat is defined and not remote_authorized_keys_stat.stat.exists)
+    or (remote_ssh_keys.rc is defined and remote_ssh_keys.rc != 0)
+    or (remote_ssh_keys.stdout is defined and remote_ssh_keys.stdout | length == 0)
+
+- name: Confirm SSH hardening when no keys detected
+  ansible.builtin.pause:
+    prompt: |
+      No SSH authorized_keys found. Do you want to continue with SSH hardening?
+      This could lock you out! (yes/no)
+  when: >
+    (remote_authorized_keys_stat.stat is defined and not remote_authorized_keys_stat.stat.exists)
+    or (remote_ssh_keys.rc is defined and remote_ssh_keys.rc != 0)
+    or (remote_ssh_keys.stdout is defined and remote_ssh_keys.stdout | length == 0)
+  register: ssh_hardening_confirm
+
+- name: Abort if user declines
+  ansible.builtin.fail:
+    msg: "SSH hardening aborted by user"
+  when:
+    - ssh_hardening_confirm is defined
+    - ssh_hardening_confirm.user_input | default('') | lower != 'yes'
+
+- name: Pre-flight check passed
+  ansible.builtin.debug:
+    msg: "✓ Pre-flight SSH check passed - authorized_keys detected"
+  when: >
+    remote_authorized_keys_stat.stat is defined
+    and remote_authorized_keys_stat.stat.exists

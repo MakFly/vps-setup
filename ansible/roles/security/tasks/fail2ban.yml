@@ -1,0 +1,35 @@
+---
+# fail2ban Configuration
+
+- name: Install fail2ban
+  ansible.builtin.apt:
+    name:
+      - fail2ban
+      - whois
+    state: present
+
+- name: Create fail2ban local configuration
+  ansible.builtin.copy:
+    dest: /etc/fail2ban/jail.local
+    content: |
+      [DEFAULT]
+      bantime = 10m
+      findtime = 10m
+      maxretry = 5
+      backend = auto
+
+      [sshd]
+      enabled = true
+      port = {{ fail2ban_ssh_port }}
+      maxretry = {{ fail2ban_ssh_maxretry }}
+      bantime = {{ fail2ban_ssh_bantime }}
+      findtime = {{ fail2ban_ssh_findtime }}
+      banaction = iptables-multiport
+    mode: '0644'
+  notify: Restart fail2ban
+
+- name: Ensure fail2ban is running and enabled
+  ansible.builtin.systemd:
+    name: fail2ban
+    state: started
+    enabled: true
