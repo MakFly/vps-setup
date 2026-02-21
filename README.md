@@ -1,171 +1,122 @@
-# VPS Setup CLI
+<div align="center">
 
-CLI persistant pour le provisioning VPS avec Ansible. Gère plusieurs serveurs, profiles de configuration, et historique des déploiements.
+# 🖥️ VPS Setup
 
-## Installation
+**CLI moderne pour le provisioning de serveurs VPS avec Ansible**
 
-### Option 1: Script d'installation (recommandé)
+Gérez plusieurs serveurs, profiles de configuration et historique des déploiements — le tout depuis un CLI élégant et intuitif.
+
+[![GitHub release](https://img.shields.io/github/v/release/MakFly/vps-setup?style=for-the-badge&logo=github&color=blue)](https://github.com/MakFly/vps-setup/releases)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Bun](https://img.shields.io/badge/runtime-Bun-black?style=for-the-badge&logo=bun)](https://bun.sh)
+[![Ansible](https://img.shields.io/badge/automation-Ansible-red?style=for-the-badge&logo=ansible)](https://ansible.com)
+
+[Installation](#-installation) • [Démarrage rapide](#-démarrage-rapide) • [Documentation](#-documentation) • [Contribuer](#-développement)
+
+</div>
+
+---
+
+## ✨ Fonctionnalités
+
+- 🚀 **Installation en une commande** — Script d'installation automatique
+- 🎯 **Gestion multi-serveurs** — Configurez et gérez plusieurs VPS facilement
+- 📦 **Profiles réutilisables** — Créez des templates de configuration pour différents types de serveurs
+- 📜 **Historique des déploiements** — Traçabilité complète de vos provisionings
+- 🎨 **Interface TUI interactive** — Menu visuel pour les opérations courantes
+- ⚡ **Rapide et léger** — Binaire compilé natif, démarrage instantané
+- 🔐 **SSH natif** — Test de connexion intégré avant provisioning
+
+---
+
+## 📦 Installation
+
+### Via script d'installation (recommandé)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kev/vps-setup/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/MakFly/vps-setup/main/install.sh | bash
 ```
 
-### Option 2: Via Bun
+### Via téléchargement direct
+
+<details>
+<summary><b>🐧 Linux x64</b></summary>
 
 ```bash
-# Installer bun si nécessaire
-curl -fsSL https://bun.sh/install | bash
-
-# Installer le CLI
-bun install -g github:kev/vps-setup
+curl -fsSL https://github.com/MakFly/vps-setup/releases/latest/download/vps-setup-linux-x64 \
+  -o ~/.local/bin/vps-setup && chmod +x ~/.local/bin/vps-setup
 ```
+</details>
 
-### Option 3: Télécharger le binaire
-
-Télécharge le binaire correspondant à ta plateforme depuis [Releases](https://github.com/kev/vps-setup/releases):
+<details>
+<summary><b>🐧 Linux ARM64</b></summary>
 
 ```bash
-# Linux x64
-curl -fsSL https://github.com/kev/vps-setup/releases/latest/download/vps-setup-linux-x64 -o ~/.local/bin/vps-setup
-chmod +x ~/.local/bin/vps-setup
-
-# Linux ARM64
-curl -fsSL https://github.com/kev/vps-setup/releases/latest/download/vps-setup-linux-arm64 -o ~/.local/bin/vps-setup
-chmod +x ~/.local/bin/vps-setup
-
-# macOS (Apple Silicon)
-curl -fsSL https://github.com/kev/vps-setup/releases/latest/download/vps-setup-darwin-arm64 -o ~/.local/bin/vps-setup
-chmod +x ~/.local/bin/vps-setup
-
-# macOS (Intel)
-curl -fsSL https://github.com/kev/vps-setup/releases/latest/download/vps-setup-darwin-x64 -o ~/.local/bin/vps-setup
-chmod +x ~/.local/bin/vps-setup
+curl -fsSL https://github.com/MakFly/vps-setup/releases/latest/download/vps-setup-linux-arm64 \
+  -o ~/.local/bin/vps-setup && chmod +x ~/.local/bin/vps-setup
 ```
+</details>
 
-### Option 4: Depuis les sources
+<details>
+<summary><b>🍎 macOS (Apple Silicon)</b></summary>
 
 ```bash
-git clone https://github.com/kev/vps-setup.git
+curl -fsSL https://github.com/MakFly/vps-setup/releases/latest/download/vps-setup-darwin-arm64 \
+  -o ~/.local/bin/vps-setup && chmod +x ~/.local/bin/vps-setup
+```
+</details>
+
+<details>
+<summary><b>🍎 macOS (Intel)</b></summary>
+
+```bash
+curl -fsSL https://github.com/MakFly/vps-setup/releases/latest/download/vps-setup-darwin-x64 \
+  -o ~/.local/bin/vps-setup && chmod +x ~/.local/bin/vps-setup
+```
+</details>
+
+<details>
+<summary><b>🪟 Windows x64</b></summary>
+
+```powershell
+# PowerShell
+Invoke-WebRequest -Uri "https://github.com/MakFly/vps-setup/releases/latest/download/vps-setup-windows-x64.exe" -OutFile "vps-setup.exe"
+```
+</details>
+
+### Depuis les sources
+
+```bash
+git clone https://github.com/MakFly/vps-setup.git
 cd vps-setup
 bun install
 bun run build
-
-# Installer globalement
 cp dist/vps-setup ~/.local/bin/
 ```
 
-## Prérequis
+---
 
-- **Ansible** doit être installé sur la machine locale
-- **Accès SSH** aux serveurs cibles
-
-```bash
-# Installer Ansible (si nécessaire)
-pip install ansible
-# ou
-brew install ansible
-```
-
-## Démarrage rapide
+## 🚀 Démarrage rapide
 
 ```bash
-# Initialiser la configuration
+# 1. Initialiser la configuration
 vps-setup init
 
-# Ajouter un serveur
+# 2. Ajouter votre premier serveur
 vps-setup server add prod-web --host 192.168.1.100 --user root
 
-# Lister les profiles disponibles
-vps-setup profile list
+# 3. Tester la connexion
+vps-setup server test prod-web
 
-# Provisionner un serveur
+# 4. Provisionner avec un profile
 vps-setup setup prod-web --profile full-stack
-
-# Ou lancer le menu interactif
-vps-setup
 ```
 
-## Commandes
-
-### Serveurs
-
-```bash
-vps-setup server add <name>        # Ajouter un serveur
-vps-setup server list              # Lister les serveurs
-vps-setup server show <name>       # Détails d'un serveur
-vps-setup server edit <name>       # Modifier un serveur
-vps-setup server delete <name>     # Supprimer un serveur
-vps-setup server test <name>       # Tester la connexion SSH
-```
-
-### Profiles
-
-```bash
-vps-setup profile create <name>    # Créer un profile
-vps-setup profile list             # Lister les profiles
-vps-setup profile show <name>      # Détails d'un profile
-vps-setup profile edit <name>      # Modifier un profile
-vps-setup profile delete <name>    # Supprimer un profile
-vps-setup profile duplicate <src> <dst>  # Dupliquer un profile
-```
-
-### Provisioning
-
-```bash
-vps-setup setup <server>                    # Provisioning interactif
-vps-setup setup <server> --profile <name>   # Avec un profile spécifique
-vps-setup setup <server> --dry-run          # Mode check (pas de changements)
-vps-setup setup <server> --tags docker      # Exécuter seulement certains tags
-vps-setup setup --all --profile <name>      # Appliquer à tous les serveurs
-```
-
-### Historique
-
-```bash
-vps-setup history <server>        # Voir l'historique
-vps-setup history <server> --last 5    # Les 5 derniers runs
-```
-
-### Configuration
-
-```bash
-vps-setup config show             # Voir la configuration
-vps-setup config set <key> <value>  # Modifier une valeur
-```
-
-## Structure de configuration
-
-Les données sont stockées dans `~/.config/vps-setup/`:
-
-```
-~/.config/vps-setup/
-├── config.yml              # Configuration globale
-├── servers/
-│   ├── prod-web.yml        # Configuration serveur
-│   └── staging.yml
-├── profiles/
-│   ├── full-stack.yml      # Profile complet
-│   ├── minimal.yml         # Profile minimal
-│   └── security-only.yml   # Sécurité seule
-└── history/
-    └── prod-web.log        # Historique par serveur
-```
-
-## Profiles par défaut
-
-| Profile | Composants |
-|---------|------------|
-| `full-stack` | Docker, PHP-FPM, Caddy, Node.js, Bun, Security |
-| `minimal` | Docker, Security |
-| `security-only` | Security |
-
-## Menu interactif
-
-Lance `vps-setup` sans arguments pour accéder au menu TUI:
+Ou lancez simplement `vps-setup` pour accéder au menu interactif :
 
 ```
 ╔═══════════════════════════════════════════════════════════════╗
-║                    VPS Setup Manager                          ║
+║                    🖥️  VPS Setup Manager                       ║
 ╚═══════════════════════════════════════════════════════════════╝
 
   Servers: 2 | Profiles: 3
@@ -178,49 +129,161 @@ Lance `vps-setup` sans arguments pour accéder au menu TUI:
     👋 Exit
 ```
 
-## Intégration avec Ansible
+---
 
-Le CLI génère dynamiquement un fichier de configuration pour Ansible et exécute `ansible-playbook` avec les bons paramètres.
+## 📖 Documentation
 
-Structure attendue des playbooks Ansible (configurable):
+### Gestion des serveurs
+
+| Commande | Description |
+|----------|-------------|
+| `vps-setup server add <name>` | Ajouter un nouveau serveur |
+| `vps-setup server list` | Lister tous les serveurs |
+| `vps-setup server show <name>` | Afficher les détails d'un serveur |
+| `vps-setup server edit <name>` | Modifier la configuration d'un serveur |
+| `vps-setup server delete <name>` | Supprimer un serveur |
+| `vps-setup server test <name>` | Tester la connexion SSH |
+
+**Exemple :**
+
+```bash
+vps-setup server add prod-db \
+  --host 10.0.0.50 \
+  --user admin \
+  --port 2222 \
+  --tags database,production
+```
+
+### Gestion des profiles
+
+| Commande | Description |
+|----------|-------------|
+| `vps-setup profile create <name>` | Créer un nouveau profile |
+| `vps-setup profile list` | Lister tous les profiles |
+| `vps-setup profile show <name>` | Afficher les détails d'un profile |
+| `vps-setup profile edit <name>` | Modifier un profile |
+| `vps-setup profile delete <name>` | Supprimer un profile |
+| `vps-setup profile duplicate <src> <dst>` | Dupliquer un profile |
+
+### Provisioning
+
+| Commande | Description |
+|----------|-------------|
+| `vps-setup setup <server>` | Provisioning interactif |
+| `vps-setup setup <server> --profile <name>` | Avec un profile spécifique |
+| `vps-setup setup <server> --dry-run` | Mode simulation (pas de changements) |
+| `vps-setup setup <server> --tags docker,security` | Exécuter seulement certains rôles |
+| `vps-setup setup --all --profile <name>` | Appliquer à tous les serveurs |
+
+### Historique & Status
+
+```bash
+# Voir l'historique d'un serveur
+vps-setup history prod-web
+
+# Les 10 derniers déploiements
+vps-setup history prod-web --last 10
+
+# Vérifier le statut (SSH + services)
+vps-setup status prod-web
+```
+
+---
+
+## 📁 Structure de configuration
+
+```
+~/.config/vps-setup/
+├── config.yml              # Configuration globale
+├── servers/
+│   ├── prod-web.yml        # Configuration serveur
+│   ├── prod-db.yml
+│   └── staging.yml
+├── profiles/
+│   ├── full-stack.yml      # Serveur complet
+│   ├── minimal.yml         # Docker + sécurité
+│   └── security-only.yml   # Hardening uniquement
+└── history/
+    ├── prod-web.log        # Historique par serveur
+    └── prod-db.log
+```
+
+---
+
+## 🎨 Profiles par défaut
+
+| Profile | Description | Composants |
+|---------|-------------|------------|
+| `full-stack` | Serveur de développement complet | Docker, PHP-FPM, Caddy, Node.js, Bun, Security |
+| `minimal` | Installation minimale | Docker, Security |
+| `security-only` | Hardening uniquement | Security |
+
+---
+
+## ⚙️ Prérequis
+
+| Outil | Version | Installation |
+|-------|---------|--------------|
+| **Ansible** | >= 2.14 | `pip install ansible` ou `brew install ansible` |
+| **SSH** | — | Accès configuré vers les serveurs cibles |
+
+---
+
+## 🔧 Intégration Ansible
+
+VPS Setup génère dynamiquement la configuration Ansible et exécute les playbooks avec les bons paramètres.
+
+**Structure attendue :**
 
 ```
 ansible-vps-setup/
 ├── playbooks/
-│   └── provision.yml    # Playbook principal
+│   └── provision.yml      # Playbook principal
 ├── roles/
-│   ├── docker/
-│   ├── php_fpm/
-│   ├── caddy/
-│   ├── nodejs/
-│   ├── security/
-│   └── ...
+│   ├── docker/            # Installation Docker
+│   ├── php_fpm/           # PHP-FPM + extensions
+│   ├── caddy/             # Serveur web Caddy
+│   ├── nodejs/            # Node.js
+│   ├── bun/               # Runtime Bun
+│   └── security/          # Hardening serveur
 └── inventory/
 ```
 
-## Développement
+---
+
+## 🛠️ Développement
 
 ```bash
-# Cloner le repo
-git clone https://github.com/kev/vps-setup.git
+# Cloner et installer
+git clone https://github.com/MakFly/vps-setup.git
 cd vps-setup
-
-# Installer les dépendances
 bun install
 
 # Mode développement
 bun run dev --help
 
-# Build
+# Build local
 bun run build
 
-# Build pour toutes les plateformes
+# Build toutes plateformes
 bun run build:all
 
 # Tests
 bun test
 ```
 
-## Licence
+---
 
-MIT
+## 📜 Licence
+
+Ce projet est sous licence [MIT](LICENSE).
+
+---
+
+<div align="center">
+
+**Fait avec ❤️ par [MakFly](https://github.com/MakFly)**
+
+[Signaler un bug](https://github.com/MakFly/vps-setup/issues) • [Demander une fonctionnalité](https://github.com/MakFly/vps-setup/issues)
+
+</div>
