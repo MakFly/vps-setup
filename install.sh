@@ -1,13 +1,18 @@
 #!/bin/bash
 #
 # VPS Setup CLI Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/kev/vps-setup/main/install.sh | bash
-# Or:    bun install github:kev/vps-setup
+# Install:     curl -fsSL https://raw.githubusercontent.com/MakFly/vps-setup/main/install.sh | bash
+# Uninstall:   curl -fsSL https://raw.githubusercontent.com/MakFly/vps-setup/main/install.sh | bash -s -- --uninstall
+#
+# Options (via env vars):
+#   METHOD=binary   Download pre-built binary (default)
+#   METHOD=bun      Install via bun
+#   METHOD=source   Build from source
 #
 
 set -e
 
-REPO="kev/vps-setup"
+REPO="MakFly/vps-setup"
 BINARY_NAME="vps-setup"
 INSTALL_DIR="$HOME/.local/bin"
 
@@ -61,7 +66,7 @@ check_bun() {
     fi
 }
 
-# Install via bun (preferred method)
+# Install via bun
 install_via_bun() {
     echo -e "${BLUE}Installing via bun...${NC}"
 
@@ -72,7 +77,7 @@ install_via_bun() {
     fi
 
     # Install globally
-    bun install -g github:$REPO
+    bun install -g "github:$REPO"
 
     echo -e "${GREEN}✓ Installed via bun${NC}"
 }
@@ -81,12 +86,12 @@ install_via_bun() {
 download_binary() {
     echo -e "${BLUE}Downloading pre-built binary...${NC}"
 
-    BINARY_NAME="vps-setup-${OS}-${ARCH}"
+    local ASSET_NAME="vps-setup-${OS}-${ARCH}"
     if [ "$OS" = "windows" ]; then
-        BINARY_NAME="${BINARY_NAME}.exe"
+        ASSET_NAME="${ASSET_NAME}.exe"
     fi
 
-    DOWNLOAD_URL="https://github.com/$REPO/releases/latest/download/${BINARY_NAME}"
+    DOWNLOAD_URL="https://github.com/$REPO/releases/latest/download/${ASSET_NAME}"
 
     # Create install directory
     mkdir -p "$INSTALL_DIR"
@@ -132,7 +137,6 @@ build_from_source() {
     # Clone repo
     echo -e "${BLUE}Cloning repository...${NC}"
     git clone "https://github.com/$REPO.git" .
-    cd vps-setup 2>/dev/null || true
 
     # Install dependencies
     echo -e "${BLUE}Installing dependencies...${NC}"
@@ -148,38 +152,107 @@ build_from_source() {
     chmod +x "$INSTALL_DIR/vps-setup"
 
     # Cleanup
-    cd -
+    cd "$HOME"
     rm -rf "$TEMP_DIR"
 
     echo -e "${GREEN}✓ Built and installed to: $INSTALL_DIR/vps-setup${NC}"
 }
 
+# Uninstall
+uninstall() {
+    echo -e "${BLUE}Uninstalling vps-setup...${NC}"
+    echo
+
+    local removed=0
+
+    # Remove binary
+    if [ -f "$INSTALL_DIR/vps-setup" ]; then
+        rm -f "$INSTALL_DIR/vps-setup"
+        echo -e "${GREEN}✓ Removed $INSTALL_DIR/vps-setup${NC}"
+        removed=1
+    fi
+
+    # Remove config directory
+    local CONFIG_DIR="$HOME/.config/vps-setup"
+    if [ -d "$CONFIG_DIR" ]; then
+        echo -e "${YELLOW}Found config directory: $CONFIG_DIR${NC}"
+        if [ -t 0 ]; then
+            read -p "Remove config and data? [y/N] " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                rm -rf "$CONFIG_DIR"
+                echo -e "${GREEN}✓ Removed $CONFIG_DIR${NC}"
+            else
+                echo -e "${BLUE}Kept $CONFIG_DIR${NC}"
+            fi
+        else
+            echo -e "${YELLOW}Skipping config removal (non-interactive). Remove manually:${NC}"
+            echo -e "  rm -rf $CONFIG_DIR"
+        fi
+    fi
+
+    if [ "$removed" -eq 0 ]; then
+        echo -e "${YELLOW}vps-setup was not found in $INSTALL_DIR${NC}"
+    fi
+
+    echo
+    echo -e "${GREEN}✓ vps-setup uninstalled${NC}"
+    echo
+}
+
 # Main installation flow
 main() {
+    # Handle --uninstall flag
+    if [ "${1:-}" = "--uninstall" ]; then
+        uninstall
+        exit 0
+    fi
+
     detect_platform
-
-    echo
-    echo -e "${BLUE}Choose installation method:${NC}"
-    echo "  1) Install via bun (recommended, auto-updates)"
-    echo "  2) Download pre-built binary"
-    echo "  3) Build from source"
     echo
 
-    read -p "Enter choice [1-3] (default: 1): " choice
-    choice=${choice:-1}
+    # Determine install method
+    local method="${METHOD:-}"
 
-    case $choice in
-        1)
-            install_via_bun
-            ;;
-        2)
+    # If stdin is a terminal (interactive), show menu
+    if [ -t 0 ] && [ -z "$method" ]; then
+        echo -e "${BLUE}Choose installation method:${NC}"
+        echo "  1) Download pre-built binary (recommended)"
+        echo "  2) Install via bun"
+        echo "  3) Build from source"
+        echo
+        read -p "Enter choice [1-3] (default: 1): " choice
+        choice=${choice:-1}
+
+        case $choice in
+            1) method="binary" ;;
+            2) method="bun" ;;
+            3) method="source" ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                exit 1
+                ;;
+        esac
+    fi
+
+    # Default to binary download (non-interactive / curl pipe)
+    method="${method:-binary}"
+
+    echo -e "${BLUE}Install method: $method${NC}"
+    echo
+
+    case $method in
+        binary)
             download_binary
             ;;
-        3)
+        bun)
+            install_via_bun
+            ;;
+        source)
             build_from_source
             ;;
         *)
-            echo -e "${RED}Invalid choice${NC}"
+            echo -e "${RED}Unknown method: $method${NC}"
+            echo "Valid methods: binary, bun, source"
             exit 1
             ;;
     esac
@@ -190,6 +263,7 @@ main() {
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
     echo
     echo -e "Run ${BLUE}vps-setup init${NC} to get started"
+    echo -e "Run ${BLUE}vps-setup --help${NC} for all commands"
     echo
 }
 
